@@ -118,7 +118,7 @@ Nevertheless, I'd first like to at least get a count of the total respondents to
 # With:
 # TOTAL                   1308
 
-nhelpblk2008 = 1308
+nHelpblk08 = 1308
 
 # And for 2012:
 
@@ -135,7 +135,7 @@ nhelpblk2008 = 1308
 # With:
 # TOTAL                   1282
 
-nhelpblk2012 = 1282
+nHelpblk12 = 1282
 
 # Now we have total non-NA responses for this question for both years, against which we can gauge the
 # proportion of particular answers.
@@ -156,11 +156,11 @@ nhelpblk2012 = 1282
 # With:
 # TOTAL                   1875
 
-nhelpblk2016 = 1875
+nHelpblk16 = 1875
 
 ```
 
-Which is to say: for the question on the obligation of the U.S. government to "help blacks" vs. provide "no special treatment," we have `r nhelpblk2008` total responses for 2008, and `r nhelpblk2012` responses in 2012. 
+Which is to say: for the question on the obligation of the U.S. government to "help blacks" vs. provide "no special treatment," we have `r nHelpblk08` total responses for 2008, and `r nHelpblk12` responses in 2012. 
 
 SHORT NOTE WITHIN A LONG NOTE: Though it was good R practice to go through the original raw dataset, there is a an easier "cheater's" way -- i.e., the sane person's way -- to get the same basic numbers. Namely, these are included as part of the published GSS's codebook for this data at <http://gss.norc.org/get-documentation>. (See pages 576 through 579 of the PDF)
 
@@ -170,19 +170,19 @@ Let's see what those **proportions** were.
 
 ```{r number-of-subjects-answering-questions}
 
-YesHelpblk2008 <- gss %>%
+yesHelpblk08 <- gss %>%
   filter(year == '2008' & !is.na(helpblk)) %>%
   group_by(helpblk) %>%
-  summarise(count08 = n(), proportions08 = n()/nhelpblk2008)
+  summarise(count08 = n(), proportions08 = n()/nHelpblk08)
 
-YesHelpblk2008
+yesHelpblk08
 
-YesHelpblk2012 <- gss %>%
+yesHelpblk12 <- gss %>%
   filter(year == '2012' & !is.na(helpblk)) %>%
   group_by(helpblk) %>%
-  summarise(count12 = n(), proportions12 = n()/nhelpblk2012)
+  summarise(count12 = n(), proportions12 = n()/nHelpblk12)
 
-YesHelpblk2012
+yesHelpblk12
 
 ```
 
@@ -190,10 +190,10 @@ And let's also see **what that looks like** across these two editions of the sur
 
 ```{r plot-helpblk-2008-vs-2012}
 
-ggplot(YesHelpblk2008, 
+ggplot(yesHelpblk08, 
        aes(x = helpblk, y = proportions08, fill = proportions08)) + geom_col()
 
-ggplot(YesHelpblk2012, 
+ggplot(yesHelpblk12, 
        aes(x = helpblk, y = proportions12, fill = proportions12)) + geom_col()
 
 ```
@@ -233,35 +233,37 @@ $SE$ is calculated as:
 
 $$SE = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}}$$
 
-So let's construct a confidence interval for the population proportion of respondents who we would expect to answer that the government should be expected to play a role in addressing racial inequality in 2012:
+So let's construct a confidence interval for the population proportion of respondents who we would expect to answer that the government should be expected to play a role in addressing racial inequality in 2012.
 
 ```{r defining-variables-Govt12}
 
 # Determine our desired confidence level at 95% and assign the Z* level associated with it.
 
-z_star_95 <- qnorm(0.975)
+zStar95 <- qnorm(0.975)    # using statsr function to get Z score for two-tailed sig. of 5%/2 
 
-# For 2012, find the proportion answering "Govt Help Blks" relative to the total number of respondents
+# Then, for 2012, find the proportion who provided "Govt Help Blks" response
 
-nhelpblk12 <- nhelpblk2012     # from above
+nHelpblk12 <- nHelpblk12     # from above
 
 proportion_helpblk2012 <- gss %>%
   filter(year == '2012' & !is.na(helpblk) & helpblk == 'Govt Help Blks') %>%
-  summarise(n()/nhelpblk12)
+  summarise(n()/nHelpblk12)
 pGovt12 <- as.numeric(proportion_helpblk2012)
 
-# Based on success proportion and sample size, calculated the Standard Error, and from it the Margin of Error
+# Based on success proportion and sample size, calculate Standard Error, and from it the Margin of Error
 
-seGovt12 <- sqrt((pGovt12 * (1 - pGovt12))/nhelpblk12)
-meGovt12 <- z_star_95 * seGovt12
+seGovt12 <- sqrt((pGovt12 * (1 - pGovt12))/nHelpblk12)
+meGovt12 <- zStar95 * seGovt12
+lowGovt12 <- pGovt12 - meGovt12   # low end of confidence interval
+highGovt12 <- pGovt12 + meGovt12  # high end of confidence interval
 
 ```
 
-THE RESULTS: In terms of 2012 respondents to the `helpblk` question, `r round(pGovt12, 3)` of `r nhelpblk12` who answered on the five-point scale put their response at 1 ('Govt Help Blks'). This means that our standard error $SE$ will be the square root of `r round(pGovt12, 3)` $*$ (1 - `r round((pGovt12), 3)`) divided by `r nhelpblk12` = `r round(seGovt12, 3)`, and our margin of error $ME$ will be our ${Z}^\star$ value `r z_star_95` $*$ our $SE$ value `r round(seGovt12, 3)` $=$ `r round(meGovt12, 3)`.
+THE RESULTS: In terms of 2012 respondents to the `helpblk` question, `r round(pGovt12, 3)` of the `r nHelpblk12` who answered on the five-point scale put their response at 1 ('Govt Help Blks'). This means that our standard error $SE$ will be the square root of `r round(pGovt12, 3)` $*$ (1 - `r round((pGovt12), 3)`) divided by `r nHelpblk12` = `r round(seGovt12, 3)`, and our margin of error $ME$ will be our ${Z}^\star$ value `r round(zStar95,2)` $*$ our $SE$ value `r round(seGovt12, 3)` $=$ `r round(meGovt12, 3)`.
 
 Our confidence interval $CI$ for this 2012 `Govt Help Blks` proportion will, therefore, be `r round(pGovt12, 3)` $\pm$ `r round(meGovt12, 3)`. This means we can say with 95% confidence that the true proportion of our 2012 target population who would say that the government should do more to help its African American citizens would fall between `r round((pGovt12 - meGovt12),3)` and `r round((pGovt12 + meGovt12), 3)`. 
 
-We can now carry this out to the four data points and confidence intervals in which we're interested for this research question, which is to say, the proportion answering `helpblk` on either end of the 1 to 5 scale ('Govt Help Blks' and 'No Special Treatment') for 2012 vs. 2008.
+We can carry out this same process for the other three of the four data points in which we're for this research question, which is to say, the proportion answering `helpblk` on either end of the 1 to 5 scale ('Govt Help Blks' and 'No Special Treatment') for 2012 vs. 2008.
 
 ```{r defining-variables-other}
 
@@ -269,27 +271,25 @@ We can now carry this out to the four data points and confidence intervals in wh
 
 proportion_no_helpblk2012 <- gss %>%
   filter(year == '2012' & !is.na(helpblk) & helpblk == 'No Special Treatment') %>%
-  summarise(n()/nhelpblk12)
+  summarise(n()/nHelpblk12)
 pNoSpec12 <- as.numeric(proportion_no_helpblk2012)
-meNoSpec12 <- z_star_95 * sqrt((pNoSpec12 * (1 - pNoSpec12))/nhelpblk12)
+meNoSpec12 <- zStar95 * sqrt((pNoSpec12 * (1 - pNoSpec12))/nHelpblk12)
 
 # 2008, "Govt Help Blks"
 
-nhelpblk08 <- nhelpblk2008
-
 proportion_helpblk2008 <- gss %>%
   filter(year == '2008' & !is.na(helpblk) & helpblk == 'Govt Help Blks') %>%
-  summarise(n()/nhelpblk08)
+  summarise(n()/nHelpblk08)
 pGovt08 <- as.numeric(proportion_helpblk2008)
-meGovt08 <- z_star_95 * sqrt((pGovt08 * (1 - pGovt08))/nhelpblk08)
+meGovt08 <- zStar95 * sqrt((pGovt08 * (1 - pGovt08))/nHelpblk08)
 
 # 2008, "No Special Treatment"
 
 proportion_no_helpblk2008 <- gss %>%
   filter(year == '2008' & !is.na(helpblk) & helpblk == 'No Special Treatment') %>%
-  summarise(n()/nhelpblk08)
+  summarise(n()/nHelpblk08)
 pNoSpec08 <- as.numeric(proportion_no_helpblk2008)
-meNoSpec08 <- z_star_95 * sqrt((pNoSpec08 * (1 - pNoSpec08))/nhelpblk08)
+meNoSpec08 <- zStar95 * sqrt((pNoSpec08 * (1 - pNoSpec08))/nHelpblk08)
 
 ```
 
@@ -307,19 +307,25 @@ CI for 2012: `r round(pNoSpec12, 3)` $\pm$ `r round(meNoSpec12, 3)`, or (`r roun
 
 CI for 2008: `r round(pNoSpec08, 3)` $\pm$ `r round(meNoSpec08, 3)`, or (`r round((pNoSpec08 - meNoSpec08), 3)`, `r round((pNoSpec08 + meNoSpec08), 3)`)
 
-Now that we understand what we can infer about target population attitudes on this question in these two years of the GSS survey, we can address whether the changes we're seeing in the sample proportions between 2008 and 2012 are significant. We do this now in answer to the following question.
+Now that we understand what we can infer about target population attitudes on this question in these two years of the GSS survey, we can address whether the changes we're seeing in the sample proportions between 2008 and 2012 -- a drop in the proportion responding that government should help African Americans, a rise in the proportion responding that African Americans should receive no special treatment from the government -- are significant. 
+
+We do this now in answer to the following question.
 
 ### Question 2 - Differences Between Two Proportions
 
 *Q: How did the level of support/resistance change between the years of Obama's election and re-election, and is this change significant?*
 
-We know that the `helpblk` proportions for the `Govt Help Blks` and `No Special Treatment` responses are not the same in 2008 vs. 2012. But are the differences in those proportions statistically significant? To find out, we'll up a hypothesis test, starting with the `Govt Help Blks` response that affirms the belief that the government has a role to play in addressing and ameliorating the present-day effects of the history of race relations in the U.S. 
+We know that the `helpblk` proportions for the `Govt Help Blks` and `No Special Treatment` responses are not the same in 2012 as they were in 2008. But **are the differences in those proportions statistically significant?** 
 
-Our null hypothesis will be that there is no significant difference between the proporation of the target population who would provide this response in 2008 and in 2012 (with any difference detected with the "noise" level produced by the happenstance of sample); our alternative hypothesis will be that the difference we detect is significant beyond the noise level we might expect:
+To find out, we'll set up a **hypothesis test**, starting with the `Govt Help Blks` response affirming the belief that the government has a role to play in addressing and ameliorating the present-day effects of the history of race relations in the U.S. 
 
-$$H0: p08 - p12 = 0$$
-$$Ha: p08 - p12 x= 0$$
-Our conditions for conducting this test in relation to the Central Limit Theoresm remain in place: the samples are independent and and the size/skew of our sample raises no red flags.
+Our **null hypothesis** will be that there is no significant difference between the proportion of the target population who would provide this response in 2008 and in 2012, and that the difference we're seeing in our survey numbers simply falls within the expected "noise" level of the process of sampling. Our **alternative hypothesis** will be that the difference we're seeing in our samples is significant beyond this expected noise level.
+
+$$H_0: p_{2012} - p_{2008} = 0$$
+$$H_A: p_{2012} - p_{2012} \neq 0$$
+Our conditions for conducting this test in relation to the Central Limit Theoresm remain as before: the samples are independent and and the size/skew of our sample raises no red flags.
+
+The $Z$ score from which we'll derive our **p-value** -- essentially, the probability that even if the null hypothesis is true we could still see results as extreme or greater than the results we observe in our sample -- is based on the distance of the observed difference in proportion
 
 so then (obs - null)/se 
 
@@ -335,8 +341,8 @@ With se = pooled proportion.
 
 # Remind ourselves of how many answered this question in each year:
 
-nhelpblk08
-nhelpblk12
+nHelpblk08
+nHelpblk12
 
 # How many answered "Govt Help Blks" affirmatively in each year
 
@@ -372,13 +378,13 @@ GovtSuccess12
 
 # Then the pooled proportion is the # of successes divided by the number of total respondents
 
-pPool <- (GovtSuccess08 + GovtSuccess12)/(nhelpblk08 + nhelpblk12)
+pPool <- (GovtSuccess08 + GovtSuccess12)/(nHelpblk08 + nHelpblk12)
 pPool
 
 # The standard error is the square root of the sum of the pooled proportion divided by
 # the number of responses for both years
 
-seGovt <- sqrt((pPool*(1-pPool))/nhelpblk08 + (pPool*(1-pPool))/nhelpblk12)
+seGovt <- sqrt((pPool*(1-pPool))/nHelpblk08 + (pPool*(1-pPool))/nHelpblk12)
 seGovt
 
 # The z score, as always, is the observed value less the null value divided by the standard error
@@ -421,8 +427,7 @@ But there are two significant questions we might ask that would complicate this 
 # 5 NO SPECIAL TREATMENT   430
 # TOTAL                   1875
 
-nhelpblk2016 = 1875
-
+nHelpblk16 = 1875
 
 
 ```
