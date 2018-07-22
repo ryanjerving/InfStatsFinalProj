@@ -391,78 +391,46 @@ meNoSpec08 &lt;-<span class="st"> </span>zStar95 <span class="op">*</span><span 
 <div id="question-2---differences-between-two-proportions" class="section level3">
 <h3>Question 2 - Differences Between Two Proportions</h3>
 <p><em>Q: How did the level of support/resistance change between the years of Obama’s election and re-election, and is this change significant?</em></p>
-<p>We know that the <code>helpblk</code> proportions for the <code>Govt Help Blks</code> and <code>No Special Treatment</code> responses are not the same in 2012 as they were in 2012. But are the differences in those proportions statistically significant?</p>
-<p>To find out, we’ll set up a hypothesis test, starting with the <code>Govt Help Blks</code> response affirming the belief that the government has a role to play in addressing and ameliorating the present-day effects of the history of race relations in the U.S.</p>
-<p>Our null hypothesis will be that there is no significant difference between the proportion of the target population who would provide this response in 2008 and in 2012, and that the difference we’re seeing in our numbers simply falls within the expected “noise” level of the process of sampling. Our alternative hypothesis will be that the difference we’re seeing in our samples is significant beyond this expected noise level.</p>
-<p><span class="math display">\[H_0: p_{2012} - p_{2008} = 0\]</span> <span class="math display">\[H_A: p_{2012} - p_{2012} \neq 0\]</span> Our conditions for conducting this test in relation to the Central Limit Theoresm remain in place: the samples are independent and and the size/skew of our sample raises no red flags.</p>
-<p>so then (obs - null)/se</p>
-<p>With se = pooled proportion.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Write stuff</span>
-<span class="co"># Construct hypothesis (conditions)</span>
-<span class="co"># Don't forget about pooled porportion</span>
-<span class="co"># Figure out diff for yes-help: manually, then with inference formula</span>
-<span class="co"># Figure out diff for no-special: manually, then with inference formula</span>
+<p>We know that the <code>helpblk</code> proportions for the <code>Govt Help Blks</code> and <code>No Special Treatment</code> responses are not the same in 2012 as they were in 2008. But <strong>are the differences in those proportions statistically significant?</strong></p>
+<p>To find out, we’ll set up a <strong>hypothesis test</strong>, starting with the <code>Govt Help Blks</code> response affirming the belief that the government has a role to play in addressing and ameliorating the present-day effects of the history of race relations in the U.S.</p>
+<p>Our <strong>null hypothesis</strong> will be that there is no significant difference between the proportion of the target population who would provide this response in 2008 and in 2012, and that the difference we’re seeing in our survey numbers simply falls within the expected “noise” level of the process of sampling. Our <strong>alternative hypothesis</strong> will be that the difference we’re seeing in our samples is significant beyond this expected noise level.</p>
+<p><span class="math display">\[H_0: p_{2012} - p_{2008} = 0\]</span> <span class="math display">\[H_A: p_{2012} - p_{2012} \neq 0\]</span> Our conditions for conducting this test in relation to the Central Limit Theoresm remain as before: the samples are independent and the size/skew of our sample raises no red flags.</p>
+<p>The <strong>Z score</strong> from which we’ll derive our <strong>p-value</strong> – essentially, the probability that our sample could deliver results as extreme or greater than what we’ve observed even if the null hypothesis is true – is based on the change we observe in our two sample proportions and the difference between this change and the change we would expect from our null hypothesis (no change!), normalized through factoring this difference by our standard error for our samples.</p>
+<p><span class="math display">\[Z_{diff} = \frac{Observed_{diff} - Expected_{diff}}{SE_{diff}}\]</span></p>
+<p>The standard error in the case of the difference between two proportions relies on a <strong>pooled proportion</strong> to estimate a weighted average proportion from potentially differently sized samples, summing the the total numbers of “successes” for the response in each sample (i.e., respondents answering “Govt Help Blks”) divided by the sum of both total sample sizes…</p>
+<p><span class="math display">\[\hat{p}_{pooled} = \frac{Successes_{sample1}+Successes_{sample2}}{n_{sample1}+n_{sample2}}\]</span> …with the Standard Error then caluculated as:</p>
+<p><span class="math display">\[SE = \sqrt{\frac{\hat{p}_{pooled}*(1-\hat{p}_{pooled})}{n_{sample1}}+\frac{\hat{p}_{pooled}*(1-\hat{p}_{pooled})}{n_{sample2}}}\]</span></p>
+<p>Since we are testing our hypotheses at the 95% confidence level, we will be able to reject the null hypothesis only if the p-value associated with our Z score is less than 0.05.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Calculate Z score: observed difference is the proportion answering &quot;Govt Help Blacks&quot; in 2012 vs. in 2008,</span>
+<span class="co"># and expected difference is our null hypothesis expectation of no change.</span>
 
-<span class="co"># Remind ourselves of how many answered this question in each year:</span>
+pDiffGovt =<span class="st"> </span>pGovt12 <span class="op">-</span><span class="st"> </span>pGovt08
+pNullGovt =<span class="st"> </span><span class="dv">0</span>
 
-nHelpblk08</code></pre></div>
-<pre><code>## [1] 1308</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">nHelpblk12</code></pre></div>
-<pre><code>## [1] 1282</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># How many answered &quot;Govt Help Blks&quot; affirmatively in each year</span>
+<span class="co"># Standard error for the difference between two proportions uses pooled proportion of successes.</span>
 
-GovtSuccess08 &lt;-<span class="st"> </span>gss <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> '2008'</span> <span class="op">&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(helpblk) <span class="op">&amp;</span><span class="st"> </span>helpblk <span class="op">==</span><span class="st"> 'Govt Help Blks'</span>) <span class="op">%&gt;%</span>
+sucGovt08 &lt;-<span class="st"> </span>gss <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> '2008'</span> <span class="op">&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(helpblk) <span class="op">&amp;</span><span class="st"> </span>helpblk <span class="op">==</span><span class="st"> 'Govt Help Blks'</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarise</span>(<span class="dt">countGov08 =</span> <span class="kw">n</span>())
+sucGovt08 &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(sucGovt08)
 
-GovtSuccess12 &lt;-<span class="st"> </span>gss <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> '2012'</span> <span class="op">&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(helpblk) <span class="op">&amp;</span><span class="st"> </span>helpblk <span class="op">==</span><span class="st"> 'Govt Help Blks'</span>) <span class="op">%&gt;%</span>
+sucGovt12 &lt;-<span class="st"> </span>gss <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> '2012'</span> <span class="op">&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(helpblk) <span class="op">&amp;</span><span class="st"> </span>helpblk <span class="op">==</span><span class="st"> 'Govt Help Blks'</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarise</span>(<span class="dt">countGov12 =</span> <span class="kw">n</span>())
+sucGovt12 &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(sucGovt12)
 
-<span class="co"># And in what proportion</span>
+pPooledGovt =<span class="st"> </span>(sucGovt12 <span class="op">+</span><span class="st"> </span>sucGovt08) <span class="op">/</span><span class="st"> </span>(nHelpblk12 <span class="op">+</span><span class="st"> </span>nHelpblk08)
+seDiffGovt =<span class="st"> </span><span class="kw">sqrt</span>(((pPooledGovt <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span><span class="op">-</span>pPooledGovt)) <span class="op">/</span><span class="st"> </span>nHelpblk12) <span class="op">+</span>
+<span class="st">                    </span>((pPooledGovt <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span><span class="op">-</span>pPooledGovt)) <span class="op">/</span><span class="st"> </span>nHelpblk08))
 
-pGovt08</code></pre></div>
-<pre><code>## [1] 0.09556575</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pGovt12</code></pre></div>
-<pre><code>## [1] 0.0725429</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># What is the different in that proportion</span>
+<span class="co"># Then Z score is (observed - expected) divided by the standard error.</span>
 
-pDiff &lt;-<span class="st"> </span>pGovt12 <span class="op">-</span><span class="st"> </span>pGovt08
-pDiff</code></pre></div>
-<pre><code>## [1] -0.02302285</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Since this is a null hypothesis, what is our null proportion for the difference</span>
+zDiffGovt =<span class="st"> </span>(pDiffGovt <span class="op">-</span><span class="st"> </span>pNullGovt) <span class="op">/</span><span class="st"> </span>seDiffGovt
 
-nullProp &lt;-<span class="st"> </span><span class="dv">0</span>
-nullProp</code></pre></div>
-<pre><code>## [1] 0</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># For the pooled proportion in the standard error, we'll need the total number of &quot;successes&quot;</span>
-<span class="co"># on this question from both years</span>
+<span class="co"># And the p-value is the one associated with this Z-score.</span>
 
-GovtSuccess08 &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(GovtSuccess08)
-GovtSuccess12 &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(GovtSuccess12)
-
-GovtSuccess08</code></pre></div>
-<pre><code>## [1] 125</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">GovtSuccess12</code></pre></div>
-<pre><code>## [1] 93</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Then the pooled proportion is the # of successes divided by the number of total respondents</span>
-
-pPool &lt;-<span class="st"> </span>(GovtSuccess08 <span class="op">+</span><span class="st"> </span>GovtSuccess12)<span class="op">/</span>(nHelpblk08 <span class="op">+</span><span class="st"> </span>nHelpblk12)
-pPool</code></pre></div>
-<pre><code>## [1] 0.08416988</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># The standard error is the square root of the sum of the pooled proportion divided by</span>
-<span class="co"># the number of responses for both years</span>
-
-seGovt &lt;-<span class="st"> </span><span class="kw">sqrt</span>((pPool<span class="op">*</span>(<span class="dv">1</span><span class="op">-</span>pPool))<span class="op">/</span>nHelpblk08 <span class="op">+</span><span class="st"> </span>(pPool<span class="op">*</span>(<span class="dv">1</span><span class="op">-</span>pPool))<span class="op">/</span>nHelpblk12)
-seGovt</code></pre></div>
-<pre><code>## [1] 0.01091158</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># The z score, as always, is the observed value less the null value divided by the standard error</span>
-
-z_score &lt;-<span class="st"> </span>(pDiff <span class="op">-</span><span class="st"> </span>nullProp) <span class="op">/</span><span class="st"> </span>seGovt
-z_score</code></pre></div>
-<pre><code>## [1] -2.109945</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># And the p-value is the one associated with this Z-score.</span>
-
-<span class="kw">pnorm</span>(pDiff, nullProp, seGovt) <span class="co"># should this be 2x?</span></code></pre></div>
-<pre><code>## [1] 0.01743153</code></pre>
+pvalDiffGovt &lt;-<span class="st"> </span><span class="kw">pnorm</span>(zDiffGovt)</code></pre></div>
+<p>The proportion of GSS respondents answering “Govt Help Blks” dropped from 0.096 in 2008 to 0.073 in 2012: a difference of -0.023. With a pooled proportion of 0.084 and a consequent Standard Error of 0.011, our Z score for this change works out to -0.023 / 0.011 <span class="math inline">\(=\)</span> -2.11.</p>
+<p>The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: 0.017. This value falls well below the 0.05 threshold of signficance at the 95% confidence level we are using, so we can safely reject the null hypothesis.</p>
+<p>It appears that a significantly lower proportion of people in 2012 relative to 2008 were willing to say that the government should play an active role in addressing the inequalities resulting from the history of race in the U.S.</p>
 </div>
 </div>
 <div id="limitations-and-future-directions" class="section level2">

@@ -323,83 +323,59 @@ Our **null hypothesis** will be that there is no significant difference between 
 
 $$H_0: p_{2012} - p_{2008} = 0$$
 $$H_A: p_{2012} - p_{2012} \neq 0$$
-Our conditions for conducting this test in relation to the Central Limit Theoresm remain as before: the samples are independent and and the size/skew of our sample raises no red flags.
+Our conditions for conducting this test in relation to the Central Limit Theoresm remain as before: the samples are independent and the size/skew of our sample raises no red flags.
 
-The $Z$ score from which we'll derive our **p-value** -- essentially, the probability that even if the null hypothesis is true we could still see results as extreme or greater than the results we observe in our sample -- is based on the distance of the observed difference in proportion
+The **Z score** from which we'll derive our **p-value** -- essentially, the probability that our sample could deliver results as extreme or greater than what we've observed even if the null hypothesis is true -- is based on the change we observe in our two sample proportions and the difference between this change and the change we would expect from our null hypothesis (no change!), normalized through factoring this difference by our standard error for our samples.
 
-so then (obs - null)/se 
+$$Z_{diff} = \frac{Observed_{diff} - Expected_{diff}}{SE_{diff}}$$
 
-With se = pooled proportion.
+The standard error in the case of the difference between two proportions relies on a **pooled proportion** to estimate a weighted average proportion from potentially differently sized samples, summing the the total numbers of "successes" for the response in each sample (i.e., respondents answering "Govt Help Blks") divided by the sum of both total sample sizes...
 
-```{r figuring-out-difference}
+$$\hat{p}_{pooled} = \frac{Successes_{sample1}+Successes_{sample2}}{n_{sample1}+n_{sample2}}$$
+...with the Standard Error then caluculated as:
 
-# Write stuff
-# Construct hypothesis (conditions)
-# Don't forget about pooled porportion
-# Figure out diff for yes-help: manually, then with inference formula
-# Figure out diff for no-special: manually, then with inference formula
+$$SE = \sqrt{\frac{\hat{p}_{pooled}*(1-\hat{p}_{pooled})}{n_{sample1}}+\frac{\hat{p}_{pooled}*(1-\hat{p}_{pooled})}{n_{sample2}}}$$
 
-# Remind ourselves of how many answered this question in each year:
+Since we are testing our hypotheses at the 95% confidence level, we will be able to reject the null hypothesis only if the p-value associated with our Z score is less than 0.05.
 
-nHelpblk08
-nHelpblk12
+```{r difference-between-two-proportions}
 
-# How many answered "Govt Help Blks" affirmatively in each year
+# Calculate Z score: observed difference is the proportion answering "Govt Help Blacks" in 2012 vs. in 2008,
+# and expected difference is our null hypothesis expectation of no change.
 
-GovtSuccess08 <- gss %>% filter(year == '2008' & !is.na(helpblk) & helpblk == 'Govt Help Blks') %>%
+pDiffGovt = pGovt12 - pGovt08
+pNullGovt = 0
+
+# Standard error for the difference between two proportions uses pooled proportion of successes.
+
+sucGovt08 <- gss %>% filter(year == '2008' & !is.na(helpblk) & helpblk == 'Govt Help Blks') %>%
   summarise(countGov08 = n())
+sucGovt08 <- as.numeric(sucGovt08)
 
-GovtSuccess12 <- gss %>% filter(year == '2012' & !is.na(helpblk) & helpblk == 'Govt Help Blks') %>%
+sucGovt12 <- gss %>% filter(year == '2012' & !is.na(helpblk) & helpblk == 'Govt Help Blks') %>%
   summarise(countGov12 = n())
+sucGovt12 <- as.numeric(sucGovt12)
 
-# And in what proportion
+pPooledGovt = (sucGovt12 + sucGovt08) / (nHelpblk12 + nHelpblk08)
+seDiffGovt = sqrt(((pPooledGovt * (1-pPooledGovt)) / nHelpblk12) +
+                    ((pPooledGovt * (1-pPooledGovt)) / nHelpblk08))
 
-pGovt08
-pGovt12
+# Then Z score is (observed - expected) divided by the standard error.
 
-# What is the different in that proportion
-
-pDiff <- pGovt12 - pGovt08
-pDiff
-
-# Since this is a null hypothesis, what is our null proportion for the difference
-
-nullProp <- 0
-nullProp
-
-# For the pooled proportion in the standard error, we'll need the total number of "successes"
-# on this question from both years
-
-GovtSuccess08 <- as.numeric(GovtSuccess08)
-GovtSuccess12 <- as.numeric(GovtSuccess12)
-
-GovtSuccess08
-GovtSuccess12
-
-# Then the pooled proportion is the # of successes divided by the number of total respondents
-
-pPool <- (GovtSuccess08 + GovtSuccess12)/(nHelpblk08 + nHelpblk12)
-pPool
-
-# The standard error is the square root of the sum of the pooled proportion divided by
-# the number of responses for both years
-
-seGovt <- sqrt((pPool*(1-pPool))/nHelpblk08 + (pPool*(1-pPool))/nHelpblk12)
-seGovt
-
-# The z score, as always, is the observed value less the null value divided by the standard error
-
-z_score <- (pDiff - nullProp) / seGovt
-z_score
+zDiffGovt = (pDiffGovt - pNullGovt) / seDiffGovt
 
 # And the p-value is the one associated with this Z-score.
 
-pnorm(pDiff, nullProp, seGovt) # should this be 2x?
-
-
-
+pvalDiffGovt <- pnorm(zDiffGovt)
 
 ```
+
+The proportion of GSS respondents answering "Govt Help Blks" dropped from `r round(pGovt08,3)` in 2008 to `r round(pGovt12,3)` in 2012: a difference of `r round(pDiffGovt,3)`. With a pooled proportion of `r round(pPooledGovt,3)` and a consequent Standard Error of `r round(seDiffGovt,3)`, our Z score for this change works out to  `r round(pDiffGovt,3)` /  `r round(seDiffGovt,3)` $=$ `r round(zDiffGovt,3)`. 
+
+The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: `r round(pvalDiffGovt,3)`. This value falls well below the 0.05 threshold of signficance at the 95% confidence level we are using, so we can safely reject the null hypothesis. 
+
+It appears that a significantly lower proportion of people in 2012 relative to 2008 were willing to say that the government should play an active role in addressing the inequalities resulting from the history of race in the U.S.
+
 
 ## Limitations and Future Directions
 
