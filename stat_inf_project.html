@@ -147,6 +147,24 @@ $(document).ready(function () {
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#setup">Setup</a><ul>
+<li><a href="#load-packages">Load packages</a></li>
+<li><a href="#load-data">Load data</a></li>
+</ul></li>
+<li><a href="#part-1-gss-data">Part 1: GSS Data</a><ul>
+<li><a href="#how-collection-happens-and-its-implications-for-the-scope-of-inference">How Collection Happens and Its Implications for the Scope of Inference</a></li>
+</ul></li>
+<li><a href="#part-2-research-questions">Part 2: Research Questions</a></li>
+<li><a href="#part-3-exploratory-data-analysis">Part 3: Exploratory data analysis</a></li>
+<li><a href="#part-4-inference">Part 4: Inference</a><ul>
+<li><a href="#question-1---sample-proportions">Question 1 - Sample Proportions</a></li>
+<li><a href="#question-2---differences-between-two-proportions">Question 2 - Differences Between Two Proportions</a></li>
+</ul></li>
+<li><a href="#limitations-and-future-directions">Limitations and Future Directions</a></li>
+</ul>
+</div>
 
 <div id="setup" class="section level2">
 <h2>Setup</h2>
@@ -429,12 +447,16 @@ zDiffGovt =<span class="st"> </span>(pDiffGovt <span class="op">-</span><span cl
 
 <span class="co"># And the p-value is the one associated with this Z-score.</span>
 
-pvalDiffGovt &lt;-<span class="st"> </span><span class="kw">pnorm</span>(zDiffGovt)</code></pre></div>
+pvalDiffGovt &lt;-<span class="st"> </span><span class="kw">pnorm</span>(zDiffGovt)
+
+meDiffGovt &lt;-<span class="st"> </span>zStar95 <span class="op">*</span><span class="st"> </span><span class="kw">sqrt</span>((pGovt08 <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>pGovt08))<span class="op">/</span>nHelpblk08 <span class="op">+</span><span class="st"> </span>(pGovt12 <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>pGovt12))<span class="op">/</span>nHelpblk12)
+ciLowerDiffGovt &lt;-<span class="st"> </span>pDiffGovt <span class="op">-</span><span class="st"> </span>meDiffGovt
+ciUpperDiffGovt &lt;-<span class="st"> </span>pDiffGovt <span class="op">+</span><span class="st"> </span>meDiffGovt</code></pre></div>
 <p>The proportion of GSS respondents answering “Govt Help Blks” dropped from 0.096 in 2008 to 0.073 in 2012: a difference of -0.023. With a pooled proportion of 0.084 and a consequent Standard Error of 0.011, our Z score for this change works out to -0.023 / 0.011 <span class="math inline">\(=\)</span> -2.11.</p>
-<p>The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: 0.034 (doubling the value 0.017 to account for both tails of the distribution). This value falls below the 0.05 threshold of signficance at the 95% confidence level we are using, so we can safely reject the null hypothesis.</p>
+<p>The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: 0.034 (doubling the value 0.017 to account for both tails of the distribution). This value falls below the 0.05 threshold of signficance at the 95% confidence level we are using, so we can safely reject the null hypothesis. (This is confirmed by the confidence interval for this difference of (-0.044, -0.002), an interval that excludes the value 0 and thus tells us with 95% confidence that “no change” is not the true population parameter for the difference in proportions.)</p>
 <p>It appears that a significantly lower proportion of people in 2012 relative to 2008 were willing to say that the government should play an active role in addressing the inequalities resulting from the history of race in the U.S.</p>
 <p>Is this also the case on the other end of the scale, for the response that African American citizens should receive “No Special Treatment” from the government?</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Calculate successes, pooled proportion, standard error, Z score, and p-value:</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Calculate successes, pooled proportion, standard error, Z score, p-value, and confidence interval:</span>
 
 sucNoSpec08 &lt;-<span class="st"> </span>gss <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> '2008'</span> <span class="op">&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(helpblk) <span class="op">&amp;</span><span class="st"> </span>helpblk <span class="op">==</span><span class="st"> 'No Special Treatment'</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarise</span>(<span class="dt">countNoSpec08 =</span> <span class="kw">n</span>())
@@ -450,9 +472,13 @@ seDiffNoSpec =<span class="st"> </span><span class="kw">sqrt</span>(((pPooledNoS
 
 zDiffNoSpec =<span class="st"> </span>((pNoSpec12 <span class="op">-</span><span class="st"> </span>pNoSpec08) <span class="op">-</span><span class="st"> </span><span class="dv">0</span>) <span class="op">/</span><span class="st"> </span>seDiffNoSpec
 
-pvalDiffNoSpec &lt;-<span class="st"> </span><span class="kw">pnorm</span>(zDiffNoSpec)</code></pre></div>
+pvalDiffNoSpec &lt;-<span class="st"> </span><span class="kw">pnorm</span>(zDiffNoSpec)
+
+meDiffNoSpec &lt;-<span class="st"> </span>zStar95 <span class="op">*</span><span class="st"> </span><span class="kw">sqrt</span>((pNoSpec08 <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>pNoSpec08))<span class="op">/</span>nHelpblk08 <span class="op">+</span><span class="st"> </span>(pNoSpec12 <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>pNoSpec12))<span class="op">/</span>nHelpblk12)
+ciLowerDiffNoSpec &lt;-<span class="st"> </span>(pNoSpec12 <span class="op">-</span><span class="st"> </span>pNoSpec08) <span class="op">-</span><span class="st"> </span>meDiffNoSpec
+ciUpperDiffNoSpec &lt;-<span class="st"> </span>(pNoSpec12 <span class="op">-</span><span class="st"> </span>pNoSpec08) <span class="op">+</span><span class="st"> </span>meDiffNoSpec</code></pre></div>
 <p>The proportion of GSS respondents answering “No Special Treatment” rose from 0.293 in 2008 to 0.349 in 2012: a difference of 0.056. With a pooled proportion of 0.32 and a consequent Standard Error of 0.018, our Z score for this change works out to 0.056 / 0.018 <span class="math inline">\(=\)</span> 3.046.</p>
-<p>The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: 0.002 (doubling the value 0.001 to account for both tails of the distribution). This value falls below the 0.05 threshold of signficance at the 95% confidence level we are using (indeed, it would fall below a 99% confidence level threshold), so we can safely reject the null hypothesis.</p>
+<p>The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: 0.002 (doubling the value 0.001 to account for both tails of the distribution). This value falls below the 0.05 threshold of signficance at the 95% confidence level we are using (indeed, it would fall below a 99% confidence level threshold), so we can safely reject the null hypothesis. (The confidence interval for this difference of (0.02, 0.092) confirms that the “no change” value of 0 is excluded at a 95% confidence level.)</p>
 <p>So, as with the drop in the proportion of “Govt Help Blks” responses, a significantly higher proportion of people in 2012 relative to 2008 were willing to say African Americans should receive no special treatment from the government in the service of addressing racial inequalities.</p>
 </div>
 </div>
@@ -461,12 +487,12 @@ pvalDiffNoSpec &lt;-<span class="st"> </span><span class="kw">pnorm</span>(zDiff
 <p>One implication of these findings is that, between 2008 and 2012, attitudes among the general adult, non-institutionalized U.S. population hardened against the idea that the government had a role in addressing the historical and structural inequalities faced by African American citizens. And, one could speculate, this shift was part of a backlash against the 2008 election of the U.S.’s first black president and a hint at the swing to the right that anticipated the 2016 election of Donald J. Trump.</p>
 <p>But there are two significant questions we might ask that would complicate this narrative.</p>
 <ol style="list-style-type: decimal">
-<li><p>First, we might want to ask if this shift between 2008 and 2012 was part of a longer historical trend or a blip in the larger narrative? In this sense, the answer to the GSS <code>helpblk</code> question in 2016 – the year of Trump’s electoral victory – is interesting and instructive, as we’ll see below:</p></li>
+<li><p>First, we might want to ask if this shift between 2008 and 2012 was part of a longer historical trend or a blip in the larger narrative? In this sense, the answer to the GSS <code>helpblk</code> question in 2016 – the year of Trump’s electoral victory – is interesting and instructive, as we’ll see below.</p></li>
 <li><p>And, second, we could explore whether this shift represented a particular rethinking of race, or whether it just was part of a more general trend of anti-Big Government thinking of the sort that brought about the “Tea Party” wave of limited government conservatives that were elected to Congress in the 2010 midterms. Were changes in attitude with respect to federal intervention in race matter sharper than that broader shift against the idea of government intervention in general? In particular, were the changes more significant than those in areas coded as non-racial, such as the GSS questions about the government’s role in providing access to healthcare or addressing income inequality?</p></li>
 </ol>
-<p>On the second question, I’ll have little to say here – that will have to be a question for another day – other than the fact that these results would be a good candidate for a chi-square independenct test analysis.</p>
+<p>On the second question, I’ll have little to say here – that will have to be a question for another day – other than the fact that these results would be a good candidate for a chi-square independence test analysis.</p>
 <p>But on the first, it turns out that there’s a surprise twist. In 2016, the proportion answering “Govt Help Blks” reversed course, rising to 0.131 from the 0.073 we saw in 2012. Likewise, the proportion answering “No Special Treatment” <em>dropped</em> sharply, from 0.349 in 2012 to 0.229 in the 2016 survey. For both of these results, the p-value is &lt; 0.0001, suggesting a very significant reversal of the shift we saw between 2008 and 2012, and totally ruining the story I thought I was telling!</p>
-<p>NOTE: You may have noticed that so far I’ve run my inference tests the old-fashioned way, and haven’t taken advantage of the nifty <code>inference()</code> function provided as part of the <code>statsr</code> package developed by the Duke team for this Coursera MOOC. I made this choice due to the missing values in the cleaned data set, but I will show the work below using this function on the full GSS dataset referred to at the beginning of this project.</p>
+<p>NOTE: You may have noticed that so far I’ve run my inference tests the old-fashioned way, and haven’t taken advantage of the nifty <code>inference()</code> function provided as part of the <code>statsr</code> package developed by the Duke team for this Coursera MOOC. I made this choice due to the missing values in the cleaned data set, but I will show the work below using this function on the full GSS dataset referred to at the beginning of this project for the four hypothesis tests I’ve conducted on year-to-year differences in proportions.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Here are the hypothesis tests run using the statsr packages inference() function,</span>
 <span class="co"># run on two-year comparison subsets drawn from the unexpurgated GSS dataset at </span>
 <span class="co"># http://gss.norc.org/documents/spss/GSS_spss.zip</span>

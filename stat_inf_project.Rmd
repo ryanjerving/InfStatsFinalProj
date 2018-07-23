@@ -5,6 +5,7 @@ output:
     fig_height: 4
     highlight: pygments
     theme: spacelab
+    toc: TRUE
 ---
 
 ## Setup
@@ -369,11 +370,15 @@ zDiffGovt = (pDiffGovt - pNullGovt) / seDiffGovt
 
 pvalDiffGovt <- pnorm(zDiffGovt)
 
+meDiffGovt <- zStar95 * sqrt((pGovt08 * (1 - pGovt08))/nHelpblk08 + (pGovt12 * (1 - pGovt12))/nHelpblk12)
+ciLowerDiffGovt <- pDiffGovt - meDiffGovt
+ciUpperDiffGovt <- pDiffGovt + meDiffGovt
+
 ```
 
 The proportion of GSS respondents answering "Govt Help Blks" dropped from `r round(pGovt08,3)` in 2008 to `r round(pGovt12,3)` in 2012: a difference of `r round(pDiffGovt,3)`. With a pooled proportion of `r round(pPooledGovt,3)` and a consequent Standard Error of `r round(seDiffGovt,3)`, our Z score for this change works out to  `r round(pDiffGovt,3)` /  `r round(seDiffGovt,3)` $=$ `r round(zDiffGovt,3)`. 
 
-The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: `r 2*round(pvalDiffGovt,3)` (doubling the value `r round(pvalDiffGovt, 3)` to account for both tails of the distribution). This value falls below the 0.05 threshold of signficance at the 95% confidence level we are using, so we can safely reject the null hypothesis. 
+The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: `r 2*round(pvalDiffGovt,3)` (doubling the value `r round(pvalDiffGovt, 3)` to account for both tails of the distribution). This value falls below the 0.05 threshold of signficance at the 95% confidence level we are using, so we can safely reject the null hypothesis. (This is confirmed by the confidence interval for this difference of (`r round(ciLowerDiffGovt, 3)`, `r round(ciUpperDiffGovt, 3)`), an interval that excludes the value 0 and thus tells us with 95% confidence that "no change" is not the true population parameter for the difference in proportions.)
 
 It appears that a significantly lower proportion of people in 2012 relative to 2008 were willing to say that the government should play an active role in addressing the inequalities resulting from the history of race in the U.S.
 
@@ -381,7 +386,7 @@ Is this also the case on the other end of the scale, for the response that Afric
 
 ```{r difference-between-two-proportions-no-special-treatment}
 
-# Calculate successes, pooled proportion, standard error, Z score, and p-value:
+# Calculate successes, pooled proportion, standard error, Z score, p-value, and confidence interval:
 
 sucNoSpec08 <- gss %>% filter(year == '2008' & !is.na(helpblk) & helpblk == 'No Special Treatment') %>%
   summarise(countNoSpec08 = n())
@@ -399,11 +404,14 @@ zDiffNoSpec = ((pNoSpec12 - pNoSpec08) - 0) / seDiffNoSpec
 
 pvalDiffNoSpec <- pnorm(zDiffNoSpec)
 
+meDiffNoSpec <- zStar95 * sqrt((pNoSpec08 * (1 - pNoSpec08))/nHelpblk08 + (pNoSpec12 * (1 - pNoSpec12))/nHelpblk12)
+ciLowerDiffNoSpec <- (pNoSpec12 - pNoSpec08) - meDiffNoSpec
+ciUpperDiffNoSpec <- (pNoSpec12 - pNoSpec08) + meDiffNoSpec
 ```
 
 The proportion of GSS respondents answering "No Special Treatment" rose from `r round(pNoSpec08,3)` in 2008 to `r round(pNoSpec12,3)` in 2012: a difference of `r round((pNoSpec12 - pNoSpec08),3)`. With a pooled proportion of `r round(pPooledNoSpec,3)` and a consequent Standard Error of `r round(seDiffNoSpec,3)`, our Z score for this change works out to  `r round((pNoSpec12 - pNoSpec08),3)` /  `r round(seDiffNoSpec,3)` $=$ `r round(zDiffNoSpec,3)`. 
 
-The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: `r 2*(1 - round(pvalDiffNoSpec,3))` (doubling the value `r (1 - round(pvalDiffNoSpec, 3))` to account for both tails of the distribution). This value falls below the 0.05 threshold of signficance at the 95% confidence level we are using (indeed, it would fall below a 99% confidence level threshold), so we can safely reject the null hypothesis. 
+The probability that we would see a difference this extreme or more is expressed in the p-value associated with this Z score: `r 2*(1 - round(pvalDiffNoSpec,3))` (doubling the value `r (1 - round(pvalDiffNoSpec, 3))` to account for both tails of the distribution). This value falls below the 0.05 threshold of signficance at the 95% confidence level we are using (indeed, it would fall below a 99% confidence level threshold), so we can safely reject the null hypothesis. (The confidence interval for this difference of (`r round(ciLowerDiffNoSpec, 3)`, `r round(ciUpperDiffNoSpec, 3)`) confirms that the "no change" value of 0 is excluded at a 95% confidence level.)
 
 So, as with the drop in the proportion of "Govt Help Blks" responses, a significantly higher proportion of people in 2012 relative to 2008 were willing to say African Americans should receive no special treatment from the government in the service of addressing racial inequalities.
 
